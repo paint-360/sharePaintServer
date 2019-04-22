@@ -23,7 +23,9 @@ server.on('request',function(request,response){
 server.listen(3000, '127.0.0.1', () => {
   console.log('服务器运行在 http:/127.0.0.1:3000/');
 });
-var io=ws(server);
+
+const websocket= http.createServer().listen(3030, '127.0.0.1');
+var io=ws(websocket);
 var all=[];
 io.on('connection',function(socket){
 	// console.log(all);

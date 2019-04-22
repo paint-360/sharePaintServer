@@ -20,7 +20,7 @@
 <script src="https://cdn.bootcss.com/socket.io/1.7.3/socket.io.min.js"></script>
 <script type="text/javascript">
 	var content=document.getElementById('content');
-	var socket=io.connect("/");
+	var socket=io.connect("ws://127.0.0.1:3030");
 	socket.on('message',function(mes){
 		// console.log(mes);
 		if(mes instanceof Array){
