@@ -48,7 +48,7 @@ io.on('connection',function(socket){
 	// console.log(all);
 	io.to(socket.id).emit('message',all);
 	socket.on('message',function(paint){
-		console.log(paint);
+		// console.log(paint);
 		all.push(paint);
 		io.emit('message',paint);
 	})
