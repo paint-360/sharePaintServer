@@ -14,7 +14,7 @@ const eraserWidth=16;
             this.optionStack=[];//操作记录栈
             this.resultposition=[];
             this.ws=this.initWebSocket();  
-
+            this.message;
             //画笔渐变色
             var linearGradient = this.context.createLinearGradient(0,0,innerWidth,innerHeight);
             linearGradient.addColorStop(0,"#1EEB9F");
@@ -25,37 +25,25 @@ const eraserWidth=16;
             this.drawLine();
         }
         initWebSocket(){
-            // let ws = new WebSocket("ws://localhost:3000");
-            // let self=this;
+            let ws=io.connect("ws://127.0.0.1:3000");
+            //let ws = new WebSocket("ws://localhost:3000");
+            let self=this;
             // ws.onopen = function(evt) { 
             //     console.log("Connection open ...");
             // };
 
-            // ws.onmessage = function(evt) {
-            //     console.log( "Received Message: " + evt.data);
-            //     self.update();
-            // };
+            ws.on('message', function(data) {
+                // console.log( "Received Message: " + evt.data);
+                self.optionStack.push(data);
+                self.message=data;
+                console.log(data);
+                self.update();
+            })
 
             // ws.onclose = function(evt) {
             //     console.log("Connection closed.");
             // }; 
-            var socket=io.connect("ws://127.0.0.1:3000");
-            socket.on('message',function(mes){
-                // console.log(mes);
-                if(mes instanceof Array){
-                    //遍历数组
-                }else{
-                    //解析对象
-                }
-            })
-            return socket;
-            // function send(val){
-            //     var paint={
-            //         type:2,
-            //         content:val
-            //     }
-            //     socket.send(paint);
-            // }
+            return ws;
         }
         drawLine() {
             var self = this;
@@ -88,10 +76,8 @@ const eraserWidth=16;
                 self.context.canvas.removeEventListener("mousemove",moveAction);
                 self.optionStack.push(message);
                 self.resultposition=[];
-                console.log(message);
                 self.ws.send(message);
-                // socket.send(message);
-                console.log(JSON.stringify(self.optionStack));
+                //console.log(JSON.stringify(self.optionStack));
             }
             //封装鼠标移动函数
             function moveAction(event) {
@@ -105,13 +91,28 @@ const eraserWidth=16;
                 }
                 item={x:event.pageX,y:event.pageY};
                 self.resultposition.push(item);
+                
                 self.context.lineTo(event.pageX,event.pageY);
                 self.context.stroke();
             }
         }
         //更新画布内容
         update(){
-
+            let op=this.message.option;
+            switch(op){
+                case 0:
+                    this.message.positions.forEach(position=>{
+                        this.context.clearRect(position.x-eraserWidth/2,position.y-eraserWidth/2,eraserWidth,eraserWidth);
+                        this.context.stroke();
+                    })
+                    break;
+                case 1:
+                    this.message.positions.forEach(position=>{
+                        this.context.lineTo(position.x,position.y);
+                        this.context.stroke();
+                    })
+                    break;
+            }
         }
         //封装画笔宽度
         setLineWidth(width) {
@@ -131,6 +132,7 @@ const eraserWidth=16;
         }
         //封装橡皮擦
         eraser(){
+            this.option=0;
             this.isClear=true;
         }
         //封装清屏
