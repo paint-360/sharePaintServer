@@ -3,10 +3,22 @@
  * js/painer.js
  */
 const eraserWidth=16;
+function throttle(fn,delay){
+	let prev=Date.now();
+	return function(){
+		let context=this;
+		let args=arguments;
+		let current=Date.now();
+		if(current-prev>delay){
+			fn.apply(context,args);
+			prev=current;
+		}
+	}
+}
 (function () {
     class Painter{
         constructor(id) {
-            var canvasEle = document.getElementById(id);
+            let canvasEle = document.getElementById(id);
             canvasEle.width = innerWidth;
             canvasEle.height = innerHeight;
             this.option=1;//记录操作类型 1为画笔 0为橡皮檫
@@ -14,9 +26,8 @@ const eraserWidth=16;
             this.optionStack=[];//操作记录栈
             this.resultposition=[];
             this.ws=this.initWebSocket();  
-            this.message;
             //画笔渐变色
-            var linearGradient = this.context.createLinearGradient(0,0,innerWidth,innerHeight);
+            let linearGradient = this.context.createLinearGradient(0,0,innerWidth,innerHeight);
             linearGradient.addColorStop(0,"#1EEB9F");
             linearGradient.addColorStop(0.5,"#FFFFFF");
             linearGradient.addColorStop(1,"#26B9EB");
@@ -34,10 +45,12 @@ const eraserWidth=16;
 
             ws.on('message', function(data) {
                 // console.log( "Received Message: " + evt.data);
-                self.optionStack.push(data);
-                self.message=data;
-                console.log(data);
-                self.update();
+                if(Array.isArray(data)){
+                    self.initCanvas(data);
+                }else{
+                    self.optionStack.push(data);
+                    self.update(data);
+                }
             })
 
             // ws.onclose = function(evt) {
@@ -46,7 +59,8 @@ const eraserWidth=16;
             return ws;
         }
         drawLine() {
-            var self = this;
+            let self = this;
+            let throttleMove = throttle(moveAction,50)
             //监听鼠标按下抬起
             this.context.canvas.addEventListener("mousedown",startAction);
             this.context.canvas.addEventListener("mouseup",endAction);
@@ -60,7 +74,7 @@ const eraserWidth=16;
                     self.context.stroke();
                 }
                 //监听鼠标移动
-                self.context.canvas.addEventListener("mousemove",moveAction);
+                self.context.canvas.addEventListener("mousemove",throttleMove);
             }
             //封装鼠标抬起函数
             function endAction() {
@@ -72,8 +86,9 @@ const eraserWidth=16;
                 }
                 //不再使用橡皮擦
                 self.isClear=false;
+                self.option=1;
                 //移除鼠标移动事件
-                self.context.canvas.removeEventListener("mousemove",moveAction);
+                self.context.canvas.removeEventListener("mousemove",throttleMove);
                 self.optionStack.push(message);
                 self.resultposition=[];
                 self.ws.send(message);
@@ -97,22 +112,29 @@ const eraserWidth=16;
             }
         }
         //更新画布内容
-        update(){
-            let op=this.message.option;
+        update(message){
+            let op=message.option;
             switch(op){
                 case 0:
-                    this.message.positions.forEach(position=>{
+                    message.positions.forEach(position=>{
                         this.context.clearRect(position.x-eraserWidth/2,position.y-eraserWidth/2,eraserWidth,eraserWidth);
-                        this.context.stroke();
                     })
                     break;
                 case 1:
-                    this.message.positions.forEach(position=>{
+                    this.context.beginPath();
+                    message.positions.forEach(position=>{
                         this.context.lineTo(position.x,position.y);
                         this.context.stroke();
                     })
                     break;
             }
+        }
+        //初始化画布
+        initCanvas(data){
+            this.optionStack=data;
+            this.optionStack.forEach(op=>{
+                this.update(op);
+            })
         }
         //封装画笔宽度
         setLineWidth(width) {
