@@ -34,7 +34,24 @@ server.on('request',function(request,response){
 				}
 				response.end(data);
 			});
-		}		
+		}else if(url === '/DPAlgorithm.js') {
+			// 如果url=‘/’ ,读取指定文件下的html文件，渲染到页面。
+			fs.readFile('../client/js/DPAlgorithm.js','utf-8',function(err,data){
+				if(err){
+					throw err ;
+				}
+				response.end(data);
+			});
+		}else if(url === '/index.css') {
+			// 如果url=‘/’ ,读取指定文件下的html文件，渲染到页面。
+			fs.readFile('../client/css/index.css','utf-8',function(err,data){
+				if(err){
+					throw err ;
+				}
+				response.end(data);
+			});
+		}	
+		
 	});
 
 server.listen(3000, '127.0.0.1', () => {
@@ -48,7 +65,7 @@ io.on('connection',function(socket){
 	// console.log(all);
 	io.to(socket.id).emit('message',all);
 	socket.on('message',function(paint){
-		// console.log(paint);
+		console.log(paint);
 		all.push(paint);
 		io.emit('message',paint);
 	})

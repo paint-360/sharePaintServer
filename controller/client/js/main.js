@@ -29,6 +29,9 @@
         document.querySelector('.tool button').onclick=function(){
             panter.eraser();
         }
+        document.querySelector('.rect').onclick = function() {
+            panter.drawRect();
+        }
         //下载画布内容
         document.querySelector(".download").onclick=function(){   
             var a=panter.save();
