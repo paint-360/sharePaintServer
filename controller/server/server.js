@@ -67,6 +67,6 @@ io.on('connection',function(socket){
 	socket.on('message',function(paint){
 		console.log(paint);
 		all.push(paint);
-		io.emit('message',paint);
+		socket.broadcast.emit('message',paint);
 	})
 })
