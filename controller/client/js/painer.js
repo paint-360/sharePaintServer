@@ -18,17 +18,17 @@ function throttle(fn,delay,context){
     class Painter{
         constructor(id) {
             let canvasEle = document.getElementById(id);
-            canvasEle.width = innerWidth;
-            canvasEle.height = innerHeight;
+            canvasEle.width = 900;
+            canvasEle.height = 600;
             this.option=1;//记录操作类型 1为画笔 0为橡皮檫
             this.context = canvasEle.getContext("2d");
             this.optionStack=[];//操作记录栈
             this.resultposition=[];
             this.message={};
-            this.ws=this.initWebSocket();  
+            // this.ws=this.initWebSocket();  
             this.isBegin=-1;//起始点
             //画笔渐变色
-            let linearGradient = this.context.createLinearGradient(0,0,innerWidth,innerHeight);
+            let linearGradient = this.context.createLinearGradient(0,0,900,600);
             linearGradient.addColorStop(0,"#1EEB9F");
             linearGradient.addColorStop(0.5,"#FFFFFF");
             linearGradient.addColorStop(1,"#26B9EB");
@@ -147,7 +147,7 @@ function throttle(fn,delay,context){
                 self.changeMode(2);
             }
         }
-        initWebSocket(){
+        initWebPainter(username,roomId){
             let ws=io.connect("ws://127.0.0.1:3000");
             //let ws = new WebSocket("ws://localhost:3000");
             let self=this;
@@ -168,7 +168,8 @@ function throttle(fn,delay,context){
             // ws.onclose = function(evt) {
             //     console.log("Connection closed.");
             // }; 
-            return ws;
+            this.ws=ws;
+            this.roomId=roomId;
         }
         drawRect(){
             this.changeMode(1);
@@ -239,7 +240,7 @@ function throttle(fn,delay,context){
                     break;
                 //清屏
                 case 3:
-                    this.context.clearRect(0,0,innerWidth,innerHeight);
+                    this.context.clearRect(0,0,900,600);
                     break;
             }
         }
@@ -282,7 +283,7 @@ function throttle(fn,delay,context){
                 isEnd:1
             }
             this.optionStack=[];
-            this.context.clearRect(0,0,innerWidth,innerHeight);
+            this.context.clearRect(0,0,900,600);
             this.ws.send(message);
         }
     }   

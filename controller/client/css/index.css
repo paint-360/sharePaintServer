@@ -1,9 +1,16 @@
-.div{position:absolute; border:1px dashed whitesmoke; width:0px; height:0px;left:0px; top:0px; overflow:hidden;}
-.retc{position:absolute; border:1px solid #CCCCCC; overflow:hidden; background:#EFEFEF}
+*{padding: 0;margin: 0;}
+ul{
+    display: inline-block;
+}
+a{
+    text-decoration: none;
+    width: 25px;
+    height: 25px;
+}
 #box{
     background-color: #242424;
 }
-.toolMenu{
+/* .toolMenu{
     position: absolute;
     color: white;
 }
@@ -23,16 +30,7 @@
     margin: 5px;
     border:2px solid greenyellow;
     display: none;
-}
-*{padding: 0;margin: 0;}
-a{
-    text-decoration: none;
-    width: 25px;
-    height: 25px;
-}
-#box{
-    background-color: #242424;
-}
+} */
 .tools {
     min-width: 4em;
 }
