@@ -188,9 +188,6 @@
 	<script src="js/DPAlgorithm.js"></script>
 	<script src="js/painer.js"></script>
 	<!-- <script src="js/main.js"></script> -->
-	<script type="text/javascript">
-		var painer=new Painter('box');
-	</script>
 	<!-- jQuery文件。务必在bootstrap.min.js 之前引入 -->
 	<script src="https://cdn.jsdelivr.net/npm/jquery@3.4.0/dist/jquery.min.js"></script>
 
@@ -199,21 +196,17 @@
 
 	<!-- 最新的 Bootstrap4 核心 JavaScript 文件 -->
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.3.1/dist/js/bootstrap.min.js"></script>
-	
 	<script>
-		/**
-		 * Created by Administrator on 2017/8/10.
-		 * js/main.js
-		 */
 		(function () {
 			function init() {
 				var painter = new Painter("box");
 				painter.setLineWidth(5);
 				painter.isRoundLineCap(true);
 				//painter.setLineColor("#242424");
-				var toolView = document.querySelector(".tool");
+				//	var toolView = document.querySelector(".tool");
 				document.querySelector(".pencil").onclick = function () {
-					toolView.style.display = toolView.style.display === "block" ? "none" : "block";
+					//toolView.style.display = toolView.style.display === "block" ? "none" : "block";
+					painter.drawLine();
 				};
 				document.getElementById('line_width_ipt').value = painter.context.lineWidth * 2;
 				//input的range绑定到画笔宽度
@@ -245,8 +238,6 @@
 			}
 			init();
 		})();
-	</script>
-	<script>
 		$(function () {
 			$("#login-modal").modal({
 				backdrop: "static",

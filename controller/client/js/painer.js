@@ -2,7 +2,29 @@
  * Created by Administrator on 2017/8/10.
  * js/painer.js
  */
+let canvasEle = document.getElementById('box');
+            canvasEle.width = 900;
+            canvasEle.height = 600;
 const eraserWidth=16;
+const _EleLeft=getElementLeft(canvasEle),_EleTop=getElementTop(canvasEle);
+function getElementLeft(element){
+    let actualLeft=element.offsetLeft;
+    let current=element.offsetParent;
+    while(current!==null){
+        actualLeft+=current.offsetLeft;
+        current=current.offsetParent;
+    }
+    return actualLeft;
+}
+function getElementTop(element){
+    let actualTop=element.offsetTop;
+    let current=element.offsetParent;
+    while(current!==null){
+        actualTop+=current.offsetTop;
+        current=current.offsetParent;
+    }
+    return actualTop;
+}
 function throttle(fn,delay,context){
 	let prev=Date.now();
 	return function(){
@@ -17,14 +39,14 @@ function throttle(fn,delay,context){
 (function () {
     class Painter{
         constructor(id) {
-            let canvasEle = document.getElementById(id);
-            canvasEle.width = 900;
-            canvasEle.height = 600;
+            
             this.option=1;//记录操作类型 1为画笔 0为橡皮檫
             this.context = canvasEle.getContext("2d");
             this.optionStack=[];//操作记录栈
             this.resultposition=[];
             this.message={};
+            this.roomID;
+            this.ws={};
             // this.ws=this.initWebSocket();  
             this.isBegin=-1;//起始点
             //画笔渐变色
@@ -36,6 +58,7 @@ function throttle(fn,delay,context){
             this.initEvent();
             this.drawLine();
         }
+        
         //事件注册中心
         initEvent(){
             this.startAction=startAction;
@@ -52,7 +75,7 @@ function throttle(fn,delay,context){
                 if(!self.isClear){
                     //开始新的路径
                     self.context.beginPath();
-                    self.context.moveTo(event.pageX,event.pageY);
+                    self.context.moveTo(event.pageX-_EleLeft,event.pageY-_EleTop);
                     self.context.stroke();
                 }
                 //监听鼠标移动
@@ -69,11 +92,12 @@ function throttle(fn,delay,context){
                     lineWidth:self.lineWidth,
                     lineColor:self.context.strokeStyle,
                     isBegin:self.isBegin,
-                    isEnd:1
+                    isEnd:1,
+                    roomID:self.roomID
                 }
-                //不再使用橡皮擦
-                self.isClear=false;
-                self.option=1;
+                // //不再使用橡皮擦
+                // self.isClear=false;
+                // self.option=1;
                 //移除鼠标移动事件
                 self.context.canvas.removeEventListener("mousemove",self.moveAction);
                 self.optionStack.push(message);
@@ -88,15 +112,15 @@ function throttle(fn,delay,context){
                 
                 //判断是否启动橡皮擦功能
                 if(self.isClear){
-                    self.context.clearRect(event.pageX-eraserWidth/2,event.pageY-eraserWidth/2,eraserWidth,eraserWidth);
-                    item={x:event.pageX,y:event.pageY};
+                    self.context.clearRect(event.pageX-eraserWidth/2-_EleLeft,event.pageY-eraserWidth/2-_EleTop,eraserWidth,eraserWidth);
+                    item={x:event.pageX - _EleLeft,y:event.pageY - _EleTop};
                     self.resultposition.push(item);
                     return;
                 }
-                item={x:event.pageX,y:event.pageY};
+                item={x:event.pageX - _EleLeft,y:event.pageY - _EleTop};
                 self.resultposition.push(item);
                 
-                self.context.lineTo(event.pageX,event.pageY);
+                self.context.lineTo(event.pageX - _EleLeft,event.pageY - _EleTop);
                 self.context.stroke();
                 sendMessageT();
             }
@@ -104,16 +128,16 @@ function throttle(fn,delay,context){
                 let startX=0,startY=0,id='rect';
                 let evt = window.event || e;
                 let div = document.createElement("div");
-                startX = evt.pageX;
-                startY = evt.pageY;
+                startX = evt.pageX - _EleLeft;
+                startY = evt.pageY - _EleTop;
                 div.id = id;
                 div.className = "div";
                 div.style.marginLeft = startX + "px";
                 div.style.marginTop = startY + "px";
                 document.body.appendChild(div);
                 self.message.option=2;
-                self.message.x1=evt.pageX;
-                self.message.y1=evt.pageY;
+                self.message.x1=evt.pageX - _EleLeft;
+                self.message.y1=evt.pageY - _EleTop;
                 self.context.canvas.addEventListener("mousemove",self.mouseMove);
             }
             function mouseMove(e){
@@ -122,10 +146,10 @@ function throttle(fn,delay,context){
                 let startX=self.message.x1,startY=self.message.y1;
                 // var scrollTop = document.body.scrollTop || document.documentElement.scrollTop;
                 // var scrollLeft = document.body.scrollLeft || document.documentElement.scrollLeft;
-                rectLeft = (startX - evt.pageX > 0 ? evt.pageX: startX) + "px";
-                rectTop = (startY - evt.pageY> 0 ? evt.pageY: startY) + "px";
-                rectHeight = Math.abs(startY - evt.pageY) + "px";
-                rectWidth = Math.abs(startX - evt.pageX) + "px";
+                rectLeft = (startX - (evt.pageX - _EleLeft) > 0 ? evt.pageX - _EleLeft: startX) + "px";
+                rectTop = (startY - (evt.pageY - _EleTop)> 0 ? evt.pageY - _EleTop: startY) + "px";
+                rectHeight = Math.abs(startY - (evt.pageY- _EleTop)) + "px";
+                rectWidth = Math.abs(startX - (evt.pageX - _EleLeft)) + "px";
                 document.querySelector('#rect').style.marginLeft = rectLeft;
                 document.querySelector('#rect').style.marginTop = rectTop;
                 document.querySelector('#rect').style.width = rectWidth;
@@ -137,8 +161,8 @@ function throttle(fn,delay,context){
                 console.log('mouseUp')
                 document.querySelector('#rect').remove()
                 let evt = window.event || e;
-                self.message.x2=evt.pageX;
-                self.message.y2=evt.pageY;
+                self.message.x2=evt.pageX - _EleLeft;
+                self.message.y2=evt.pageY - _EleTop;
                 self.message.lineWidth=self.lineWidth;
                 self.message.lineColor=self.context.strokeStyle;
                 self.ws.send(self.message);
@@ -147,7 +171,7 @@ function throttle(fn,delay,context){
                 self.changeMode(2);
             }
         }
-        initWebPainter(username,roomId){
+        initWebPainter(username,roomID){
             let ws=io.connect("ws://127.0.0.1:3000");
             //let ws = new WebSocket("ws://localhost:3000");
             let self=this;
@@ -169,12 +193,10 @@ function throttle(fn,delay,context){
             //     console.log("Connection closed.");
             // }; 
             this.ws=ws;
-            this.roomId=roomId;
+            this.roomID=roomID;
         }
         drawRect(){
             this.changeMode(1);
-
-            
         }
         sendMessage(){
             if(this.isBegin==-1){
@@ -188,9 +210,10 @@ function throttle(fn,delay,context){
                 lineWidth:this.lineWidth,
                 lineColor:this.context.strokeStyle,
                 isBegin:this.isBegin,
-                isEnd:0
+                isEnd:0,
+                roomID:this.roomID
             }
-            //console.log(this.resultposition)
+            console.log(message)
             this.resultposition=[];
             this.ws.send(message);
         }
@@ -213,6 +236,8 @@ function throttle(fn,delay,context){
             }
         }
         drawLine() {
+            this.option=1;
+            this.isClear=false;
             //监听鼠标按下抬起
             this.context.canvas.addEventListener("mousedown",this.startAction);
             this.context.canvas.addEventListener("mouseup",this.endAction);
@@ -280,7 +305,8 @@ function throttle(fn,delay,context){
                 lineWidth:0,
                 lineColor:'',
                 isBegin:1,
-                isEnd:1
+                isEnd:1,
+                roomID:this.roomID
             }
             this.optionStack=[];
             this.context.clearRect(0,0,900,600);
